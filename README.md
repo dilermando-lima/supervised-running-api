@@ -40,7 +40,7 @@ All running will be executed in a single supervised thread will be manage retrie
 
 ## Documentation API
 
-All implementation has been placed in `RunSupervisedProcess<T>.java` and doesn't require any external libs.
+All implementation has been placed in `RunSupervised<T>.java` and doesn't require any external libs.
 
 Method                                   | Description        | Comments
 ---                                      | ---                    | ---
@@ -61,7 +61,7 @@ Method                                   | Description        | Comments
 ### Simple  running
 Running a piece of code and retrieve result
 ```java
-    String result = new RunSupervisedProcess<String>()
+    String result = new RunSupervised<String>()
             .setRunning(() -> "value from parallel process" ) // set up running implementation
             .run() // running in a parallel managed single thread
             .getResult();
@@ -74,7 +74,7 @@ Running a piece of code and retrieve result
 ### Running with retrying on **timeout** set up
 Running a piece of code **forcing timeout** and supervising retries
 ```java
-    String result = new RunSupervisedProcess<String>()
+    String result = new RunSupervised<String>()
             .withNumRetryOnTimeOut(3)   // number of retries if timeout
             .setTimeOut(5, TimeUnit.SECONDS) // timeout less than running
             .setRunning(()->{
@@ -89,7 +89,7 @@ Running a piece of code **forcing timeout** and supervising retries
 ### Running with retrying on any **exception running**
 Running a piece of code **forcing exception** and supervising retries
 ```java
-    String result = new RunSupervisedProcess<String>()
+    String result = new RunSupervised<String>()
             .withNumRetryOnEexception(3)  // number of retries if throws any error
             .setRunning(() -> "value from parallel process" + 1/0 ) // force exception
             .run()
@@ -99,7 +99,7 @@ Running a piece of code **forcing exception** and supervising retries
 ### Running with **log** implementation
 Running a piece of code and implement **debud log**
 ```java
-    String result = new RunSupervisedProcess<String>()
+    String result = new RunSupervised<String>()
             .logDebugImplementation(System.err::println) // by default log is disable
             .setRunning(() -> "value from parallel process" )
             .run()
@@ -109,7 +109,7 @@ Running a piece of code and implement **debud log**
 ### Running with throws **timeout exception** handled
 Running a piece of code and **override behavior** when throws error in **timeout exception**
 ```java
-    String result = new RunSupervisedProcess<String>()
+    String result = new RunSupervised<String>()
             .setTimeOut(...)           
             .withNumRetryOnTimeOut(...)                           
             .setRunning(...)
@@ -122,7 +122,7 @@ Running a piece of code and **override behavior** when throws error in **timeout
 ### Running with throws **execution exception** handled
 Running a piece of code and **override behavior** when throws error in **execution exception**
 ```java
-    String result = new RunSupervisedProcess<String>()
+    String result = new RunSupervised<String>()
             .setTimeOut(...)           
             .withNumRetryOnEexception(...)                           
             .setRunning(...)

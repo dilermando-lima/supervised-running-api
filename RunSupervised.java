@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
-public class RunSupervisedProcess<T>{
+public class RunSupervised<T>{
 
     public static class TimeOutProcessException extends RuntimeException{
         public TimeOutProcessException(TimeOutProcessException e){ super(e); }
@@ -47,6 +47,8 @@ public class RunSupervisedProcess<T>{
                 handleOnFinalExecuction.accept(exceptionOnFinalExecution);
                 return defaultValueOnFinalExecutionException;
             }
+
+            
             if( exceptionOnFinalTimeOut != null){
                 handleOnFinalTimeOut.accept(exceptionOnFinalTimeOut);
                 return defaultValueOnFinalTimeOutException;
@@ -61,19 +63,19 @@ public class RunSupervisedProcess<T>{
     private TimeOutProcessException exceptionOnFinalTimeOut;
     private Consumer<ExecutionProcessException> handleOnFinalExecuction;
     private Consumer<TimeOutProcessException> handleOnFinalTimeOut;
-    private long numRetryOnTimeOut;
-    private long numRetryOnException;
+    private int numRetryOnTimeOut;
+    private int numRetryOnException;
     private long timeOut;
     private TimeUnit timeOutUnit;
     private ExecutorService executor;
-    private long retryOnExceptionTimeOutCurrentValue;
-    private long retryOnExceptionExecutionCurrentValue;
+    private int retryOnExceptionTimeOutCurrentValue;
+    private int retryOnExceptionExecutionCurrentValue;
     private T result;
     private Consumer<String> logDebugImplementation;
 
 
-    public RunSupervisedProcess(){
-        setUpInitProcess();
+    public RunSupervised(){
+        setUpInitRunning();
     }
 
     private void logDebug(String message,Object... replacement){
@@ -81,66 +83,82 @@ public class RunSupervisedProcess<T>{
             this.logDebugImplementation.accept(String.format(message, replacement));
     }
 
-    public RunSupervisedProcess<T> logDebugImplementation(Consumer<String> logDebugImplementation){
+    public RunSupervised<T> logDebugImplementation(Consumer<String> logDebugImplementation){
         this.logDebugImplementation = logDebugImplementation;
         return this;
     }
 
-    public RunSupervisedProcess<T> behaviorOnFinalExceptionExecution(Consumer<ExecutionProcessException> handleOnFinalExecuction){
+    public RunSupervised<T> behaviorOnFinalExceptionExecution(Consumer<ExecutionProcessException> handleOnFinalExecuction){
         this.handleOnFinalExecuction = handleOnFinalExecuction;
         return this;
     }
 
-    public RunSupervisedProcess<T> behaviorOnFinalExceptionTimeOut(Consumer<TimeOutProcessException> handleOnFinalTimeOut){
+    public RunSupervised<T> behaviorOnFinalExceptionTimeOut(Consumer<TimeOutProcessException> handleOnFinalTimeOut){
         this.handleOnFinalTimeOut = handleOnFinalTimeOut;
         return this;
     }
 
-    public RunSupervisedProcess<T> setTimeOut(int timeOut, TimeUnit timeUnit){
+    public RunSupervised<T> setTimeOut(long timeOut, TimeUnit timeUnit){
         this.timeOut = timeOut;
         this.timeOutUnit = timeUnit;
         return this;
     }
     
 
-    public RunSupervisedProcess<T> withNumRetryOnEexception(int numRetryOnEexception){
-        this.numRetryOnException = numRetryOnEexception;
+    public RunSupervised<T> withNumRetryOnEexception(int numRetryOnException){
+        this.numRetryOnException = numRetryOnException;
         return this;
     }
 
-    public RunSupervisedProcess<T> setRunning(Callable<T> callable){
+    public RunSupervised<T> setRunning(Callable<T> callable){
         this.callable = callable;
         return this;
     }
 
-    public RunSupervisedProcess<T> withNumRetryOnTimeOut(int numRetryOnTimeOut){
+    public RunSupervised<T> withNumRetryOnTimeOut(int numRetryOnTimeOut){
         this.numRetryOnTimeOut = numRetryOnTimeOut;
         return this;
     }
 
 
 
-    private void setUpInitProcess(){
-        this.retryOnExceptionTimeOutCurrentValue = 1;
-        this.retryOnExceptionExecutionCurrentValue= 1;
-        this.executor = Executors.newSingleThreadScheduledExecutor();
-        this.result = null;
+    private void setUpInitRunning(){
+        this.executor = null;
+        this.numRetryOnTimeOut = 1;
+        this.numRetryOnException = 1;
+        this.timeOut = 14400; // 4 hours
+        this.timeOutUnit = TimeUnit.SECONDS;
         this.handleOnFinalExecuction = exception -> { throw new ExecutionProcessException(exception); };
         this.handleOnFinalTimeOut = exception -> { throw new TimeOutProcessException(exception); };
         this.logDebugImplementation = null;
     }
 
+    private void setUpEachCallingRunning(){
+
+        this.retryOnExceptionTimeOutCurrentValue = 1;
+        this.retryOnExceptionExecutionCurrentValue= 1;
+        this.result = null;
+    }
+
+
+    private void setUpEachCallingExecute(){
+        if(  this.executor != null ){
+            this.executor.shutdownNow();
+        }
+        this.executor = Executors.newSingleThreadExecutor();
+    }
 
     public Result run(){
 
+        setUpEachCallingRunning();
+
         try{
-            logDebug("Starting managed paralel single thread");
+            logDebug("Starting managed parallel single thread");
             this.result = execute();
-            logDebug("Ending process WITH NO ERRORS");
-        }catch(TimeoutException execptionTimeoutException){
+        }catch(TimeOutProcessException execptionTimeoutException){
             logDebug("Ending process WITH TimeoutException final error");
             this.exceptionOnFinalTimeOut =  new TimeOutProcessException(execptionTimeoutException);
-        }catch(ExecutionException execptionExecutionException){
+        }catch(ExecutionProcessException execptionExecutionException){
             logDebug("Ending process WITH ExecutionException final error");
             this.exceptionOnFinalExecution = new ExecutionProcessException(execptionExecutionException);
         }  
@@ -151,26 +169,28 @@ public class RunSupervisedProcess<T>{
         return new Result();
     }
 
-    private T execute() throws TimeoutException, ExecutionException {
+    private T execute() throws TimeOutProcessException, ExecutionProcessException {
 
-        logDebug("Running %s of %s on timeout_exception_retrying", retryOnExceptionTimeOutCurrentValue, numRetryOnTimeOut);
-        logDebug("Running %s of %s on execution_exception_retrying", retryOnExceptionExecutionCurrentValue, numRetryOnException);
+        logDebug("\tRunning %s of %s on timeout_exception_retrying", retryOnExceptionTimeOutCurrentValue, numRetryOnTimeOut);
+        logDebug("\tRunning %s of %s on execution_exception_retrying", retryOnExceptionExecutionCurrentValue, numRetryOnException);
+
+        setUpEachCallingExecute();
 
         Future<T> feature = null;
         try {
 
             feature = executor.submit(callable);
-
+            logDebug("\tWaiting running");
             return feature.get(timeOut + 1, timeOutUnit);
-
+            
         } catch (TimeoutException exceptionTimeOut) {
-            logDebug("TimeOutException %s of %s",  retryOnExceptionTimeOutCurrentValue, numRetryOnTimeOut);
+            logDebug("Error TimeOutException %s of %s",  retryOnExceptionTimeOutCurrentValue, numRetryOnTimeOut);
             checkRetryOnExceptionTimeOut(exceptionTimeOut);
             feature.cancel(true);
             execute();
             
         } catch (ExecutionException exceptionExecution) {
-            logDebug("ExecutionException %s of %s", retryOnExceptionExecutionCurrentValue, numRetryOnException);
+            logDebug("Error ExecutionException %s of %s", retryOnExceptionExecutionCurrentValue, numRetryOnException);
             checkRetryOnExceptionExecution(exceptionExecution);
             feature.cancel(true);
             execute();
