@@ -187,31 +187,30 @@ Running a piece of code setting up **delay** on each retry
 
 
 ## Important! Child thread will not be managed
-Pay attention about start a child thread in running implementation. So this api doesn't managed sub thread on retries.
+Pay attention about start a child thread in running implementation. So this api doesn't managed sub thread on retries. If you need create child threads, it's suggested create this new child thread with this api.
+
+### Bad practice if you don't know how child thread will be ended.
 ```java
-   .setRunning(() ->{
+   .setRunning(() ->{ // parent thread managed by this api
 
-                new Thread(() ->{ // don't do this inside running
-                          
-                    int increment = 0;
-                    while(increment <= 1000){
-                        try {
-                            TimeUnit.MILLISECONDS.sleep(300);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                            Thread.currentThread().interrupt();
-                        } 
-                        System.err.println("\t\t\t\tprocessing: in sub-thread" + Thread.currentThread().getId());
-                        increment++;
-                    }
+      /*
+      don't do this inside running if you don't know 
+      how this sub-thread will be managed when parent one 
+      be killed on max set up retries 
+      */
+      new Thread(  () -> childThreadRunning()  ).start();
 
-                }).start();
+      /*
+      instead of above try create a child thread with timeout managed by this api
+      */
+      new RunSupervised<Void>()
+          .setTimeOut(....) // add timeout to child thread
+          .setRunning(()-> childThreadRunning() )
+          .run();
 
-                TimeUnit.SECONDS.sleep(10);
-
-                return  "value testWithTimeOutExceptionPrintOnConsoleWithSubThreadRunning()"; 
-            })
-            .run()
-                .getResult(); 
+      return ...; 
+  })
+  .run()
+      .getResult(); 
 ```
 
