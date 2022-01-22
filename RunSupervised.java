@@ -7,6 +7,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 public class RunSupervised<T>{
 
@@ -26,47 +27,41 @@ public class RunSupervised<T>{
     public class Result{
 
         public T getResult(){
-            return  getResult(null, null);
+            return  getResultHandlingThrows(null, null);
         }
 
-        public T getResultWithDefaultReturn(T defaultReturnOnFinalException){
-            return  getResult(defaultReturnOnFinalException, defaultReturnOnFinalException);
-        }
+        public T getResultHandlingThrows(Function<ExecutionProcessException,T> handleOnFinalExecuction, Function<TimeOutProcessException,T> handleOnFinalTimeOut){
 
-        public T getResultWithDefaultReturnOnFinalExceptionTimeout(T defaultReturnOnFinalTimeoutException){
-            return  getResult(null, defaultReturnOnFinalTimeoutException);
-        }
+            if(  handleOnFinalExecuction == null)
+                handleOnFinalExecuction = exception -> { throw new ExecutionProcessException(exception); };
 
-        public T getResultWithDefaultReturnOnFinalExceptionExecution(T defaultReturnOnFinalExecutionException){
-            return  getResult(defaultReturnOnFinalExecutionException, null);
-        }
-    
-        private T getResult( T defaultValueOnFinalExecutionException, T defaultValueOnFinalTimeOutException ){
+            if(  handleOnFinalTimeOut == null)
+                handleOnFinalTimeOut = exception -> { throw new TimeOutProcessException(exception); };
 
             if( exceptionOnFinalExecution != null){
-                handleOnFinalExecuction.accept(exceptionOnFinalExecution);
-                return defaultValueOnFinalExecutionException;
+                return handleOnFinalExecuction.apply(exceptionOnFinalExecution);
             }
 
-            
             if( exceptionOnFinalTimeOut != null){
-                handleOnFinalTimeOut.accept(exceptionOnFinalTimeOut);
-                return defaultValueOnFinalTimeOutException;
+                return handleOnFinalTimeOut.apply(exceptionOnFinalTimeOut);
             }
 
             return result;
+            
         }
     }
 
     private Callable<T> callable;
     private ExecutionProcessException exceptionOnFinalExecution;
     private TimeOutProcessException exceptionOnFinalTimeOut;
-    private Consumer<ExecutionProcessException> handleOnFinalExecuction;
-    private Consumer<TimeOutProcessException> handleOnFinalTimeOut;
     private int numRetryOnTimeOut;
     private int numRetryOnException;
     private long timeOut;
     private TimeUnit timeOutUnit;
+    private long delayEachTimeOutRetry;
+    private TimeUnit delayUnitEachTimeOutRetry;
+    private long delayEachExecutionRetry;
+    private TimeUnit delayUnitEachExecutionRetry;
     private ExecutorService executor;
     private int retryOnExceptionTimeOutCurrentValue;
     private int retryOnExceptionExecutionCurrentValue;
@@ -88,15 +83,6 @@ public class RunSupervised<T>{
         return this;
     }
 
-    public RunSupervised<T> behaviorOnFinalExceptionExecution(Consumer<ExecutionProcessException> handleOnFinalExecuction){
-        this.handleOnFinalExecuction = handleOnFinalExecuction;
-        return this;
-    }
-
-    public RunSupervised<T> behaviorOnFinalExceptionTimeOut(Consumer<TimeOutProcessException> handleOnFinalTimeOut){
-        this.handleOnFinalTimeOut = handleOnFinalTimeOut;
-        return this;
-    }
 
     public RunSupervised<T> setTimeOut(long timeOut, TimeUnit timeUnit){
         this.timeOut = timeOut;
@@ -104,8 +90,20 @@ public class RunSupervised<T>{
         return this;
     }
     
+    public RunSupervised<T> setDelayOnEachTimeOutExceptionRetry(long delayEachRetry, TimeUnit delayUnitEachRetry ){
+        this.delayEachTimeOutRetry = delayEachRetry;
+        this.delayUnitEachTimeOutRetry = delayUnitEachRetry;
+        return this;
+    }
 
-    public RunSupervised<T> withNumRetryOnEexception(int numRetryOnException){
+    public RunSupervised<T> setDelayOnEachExecutionExceptionRetry(long delayEachRetry, TimeUnit delayUnitEachRetry ){
+        this.delayEachExecutionRetry = delayEachRetry;
+        this.delayUnitEachExecutionRetry = delayUnitEachRetry;
+        return this;
+    }
+
+
+    public RunSupervised<T> withMaxRetryOnException(int numRetryOnException){
         this.numRetryOnException = numRetryOnException;
         return this;
     }
@@ -115,7 +113,7 @@ public class RunSupervised<T>{
         return this;
     }
 
-    public RunSupervised<T> withNumRetryOnTimeOut(int numRetryOnTimeOut){
+    public RunSupervised<T> withMaxRetryOnTimeOut(int numRetryOnTimeOut){
         this.numRetryOnTimeOut = numRetryOnTimeOut;
         return this;
     }
@@ -128,9 +126,9 @@ public class RunSupervised<T>{
         this.numRetryOnException = 1;
         this.timeOut = 14400; // 4 hours
         this.timeOutUnit = TimeUnit.SECONDS;
-        this.handleOnFinalExecuction = exception -> { throw new ExecutionProcessException(exception); };
-        this.handleOnFinalTimeOut = exception -> { throw new TimeOutProcessException(exception); };
         this.logDebugImplementation = null;
+        this.delayUnitEachTimeOutRetry = null;
+        this.delayUnitEachExecutionRetry = null;
     }
 
     private void setUpEachCallingRunning(){
@@ -197,7 +195,7 @@ public class RunSupervised<T>{
         } catch (InterruptedException e) {
             feature.cancel(true);
             Thread.currentThread().interrupt();
-            throw new NotSupervidedException(e);
+            
         } 
 
         return null;
@@ -209,6 +207,12 @@ public class RunSupervised<T>{
             throw new TimeOutProcessException(exceptionTimeOut);
         }else{
             retryOnExceptionTimeOutCurrentValue++;
+            try {
+                delayUnitEachTimeOutRetry.sleep(delayEachTimeOutRetry);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new NotSupervidedException(e);
+            }
         }
     }
 
@@ -218,6 +222,13 @@ public class RunSupervised<T>{
             throw new ExecutionProcessException(exceptionExecution);
         }else{
             retryOnExceptionExecutionCurrentValue++;
+
+            try {
+                delayUnitEachExecutionRetry.sleep(delayEachExecutionRetry);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new NotSupervidedException(e);
+            }
         }
     }
 
