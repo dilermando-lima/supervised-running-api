@@ -14,7 +14,7 @@ public class RunExample {
 
         var runSupervisedInstance = getStandardSetupRunSupervisedToAllTest();
         
-        // runSupervisedInstance.logDebugImplementation(System.err::println);    // by default log is disabled
+        runSupervisedInstance.logDebugImplementation(System.err::println);    // by default log is disabled
 
         testWithNoErrors(runSupervisedInstance);
         try{
@@ -33,6 +33,15 @@ public class RunExample {
         }catch(RuntimeException e){
             System.out.println("Error thrown on testWithTimeOutExceptionPrintOnConsole()");
         }
+        /* 
+        // NEVER DO THIS becaouse sub thread will not be killed on timeout retring
+        try{
+            testWithTimeOutExceptionPrintOnConsoleWithSubThreadRunning(runSupervisedInstance);
+        }catch(RuntimeException e){
+            System.out.println("Error thrown on testWithTimeOutExceptionPrintOnConsoleWithSubThreadRunning()");
+        }
+        */
+
 
         testHandlingExecutionException(runSupervisedInstance);
         testHandlingTimeOutException(runSupervisedInstance);
@@ -172,5 +181,38 @@ public class RunExample {
                 .getResult(); 
         System.out.println("End test: testWithTimeOutExceptionPrintOnConsole() with output = " + output);
     }
+
+    /* ==== NEVER DO THIS ============== */
+    /*
+    private static void testWithTimeOutExceptionPrintOnConsoleWithSubThreadRunning(RunSupervised<String> runSupervisedInstance){
+        System.out.println("Start test: testWithTimeOutExceptionPrintOnConsoleWithSubThreadRunning() ");
+        String output = runSupervisedInstance
+            .setRunning(() ->{
+
+                new Thread(() ->{
+                          
+                    int increment = 0;
+                    while(increment <= 1000){
+                        try {
+                            TimeUnit.MILLISECONDS.sleep(300);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                            Thread.currentThread().interrupt();
+                        } 
+                        System.err.println("\t\t\t\tprocessing: in sub-thread" + Thread.currentThread().getId());
+                        increment++;
+                    }
+
+                }).start();
+
+                TimeUnit.SECONDS.sleep(10);
+
+                return  "value testWithTimeOutExceptionPrintOnConsoleWithSubThreadRunning()"; 
+            })
+            .run()
+                .getResult(); 
+        System.out.println("End test: testWithTimeOutExceptionPrintOnConsoleWithSubThreadRunning() with output = " + output);
+    }
+    */
 
 }

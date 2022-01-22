@@ -18,7 +18,7 @@ This project is a simple API solution to execute any piece of code in a parallel
     + [Running with **log** implementation](#running-with---log---implementation)
     + [Running code handling timeout e execution exception](#running-code-handling-timeout-e-execution-exception)
     + [Running code setting up delay on retries](#running-code-setting-up-delay-on-retries)
-
+  * [Important! Child thread will not be managed](#important--child-thread-will-not-be-managed)
 
 ## Simple  running
 Running a piece of code and retrieve result
@@ -184,3 +184,34 @@ Running a piece of code setting up **delay** on each retry
           .run()
           .getResult();
 ```
+
+
+## Important! Child thread will not be managed
+Pay attention about start a child thread in running implementation. So this api doesn't managed sub thread on retries.
+```java
+   .setRunning(() ->{
+
+                new Thread(() ->{ // don't do this inside running
+                          
+                    int increment = 0;
+                    while(increment <= 1000){
+                        try {
+                            TimeUnit.MILLISECONDS.sleep(300);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                            Thread.currentThread().interrupt();
+                        } 
+                        System.err.println("\t\t\t\tprocessing: in sub-thread" + Thread.currentThread().getId());
+                        increment++;
+                    }
+
+                }).start();
+
+                TimeUnit.SECONDS.sleep(10);
+
+                return  "value testWithTimeOutExceptionPrintOnConsoleWithSubThreadRunning()"; 
+            })
+            .run()
+                .getResult(); 
+```
+
