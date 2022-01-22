@@ -207,8 +207,26 @@ public class RunSupervised<T>{
             throw new TimeOutProcessException(exceptionTimeOut);
         }else{
             retryOnExceptionTimeOutCurrentValue++;
+            delayTimeoutExceptionIfWasSetUp();
+        }
+    }
+
+    private void delayTimeoutExceptionIfWasSetUp(){
+        if(  delayUnitEachTimeOutRetry != null ){
             try {
                 delayUnitEachTimeOutRetry.sleep(delayEachTimeOutRetry);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new NotSupervidedException(e);
+            }
+        }
+    }
+
+
+    private void delayExecutionExceptionIfWasSetUp(){
+        if(  delayUnitEachExecutionRetry != null ){
+            try {
+                delayUnitEachExecutionRetry.sleep(delayEachExecutionRetry);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 throw new NotSupervidedException(e);
@@ -222,13 +240,7 @@ public class RunSupervised<T>{
             throw new ExecutionProcessException(exceptionExecution);
         }else{
             retryOnExceptionExecutionCurrentValue++;
-
-            try {
-                delayUnitEachExecutionRetry.sleep(delayEachExecutionRetry);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                throw new NotSupervidedException(e);
-            }
+            delayExecutionExceptionIfWasSetUp();
         }
     }
 

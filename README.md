@@ -1,7 +1,7 @@
 # Supervised Running API
 
 ## About
-This project is a simple API solution to execute any piece of code in a parallel thread and manage number of retrying and number of error on running.
+This project is a simple API solution to execute any piece of code in a parallel thread and manage number of retrying and number of error on running may encapsulate all execution and timeout exceptions and handle final result after all retries.
 
   * [Simple  running](#simple--running)
   * [Set up and Running code](#set-up-and-running-code)
@@ -26,8 +26,9 @@ Running a piece of code and retrieve result
   String result = new RunSupervised<String>()
           // set up running implementation
           .setRunning(() -> "value from parallel process" )
-          // running in a parallel managed single thread
+          // running in a parallel managed single thread waiting running end or all retries
           .run() 
+          // result will be availabled after all retries
           .getResult();
 
 ```
@@ -49,6 +50,7 @@ Let's see the steps of this API:
 
 ### Step 1: Instance running
 ```java
+  // RunSupervised<{Same type as running return}>
   new RunSupervised<String>()
 ```
 ### Step 2: Set up supervising
@@ -57,15 +59,15 @@ Let's see the steps of this API:
   .setTimeOut(2, TimeUnit.SECONDS)    // 14400 seconds ( 4 hours ) by default
   .withMaxRetryOnTimeOut(3)           // only once ( 1 ) by default
   .withMaxRetryOnException(3)         // only once  ( 1 ) by default
-  .setDelayOnEachExecutionExceptionRetry()  // there is no delay by default 
-  .setDelayOnEachTimeOutExceptionRetry()    // there is no delay by default 
+  .setDelayOnEachExecutionExceptionRetry(3, TimeUnit.SECONDS)  // there is no delay by default 
+  .setDelayOnEachTimeOutExceptionRetry(3, TimeUnit.SECONDS)   // there is no delay by default 
 ```
 
 ### Step 3: Set implementation running
 ```java
 // setRunning() receive a Callable<T> as argument returning same type to RunSupervised<T>
 .setRunning(() -> {  
-      return allMyRunninCodeReturnTypeOfRunSupervised();
+      return allMyRunningCodeReturningTypeOfRunSupervised();
   })
 ```
 ### Step 4: Running
@@ -73,6 +75,7 @@ Let's see the steps of this API:
 new RunSupervised<String>()
   .setTimeOut(...)
   .withMaxRetryOnTimeOut(...)
+  .setRunning(...)
   // All running will be executed in a single supervised thread that will manage retries, exceptions and result
   .run()
 ```

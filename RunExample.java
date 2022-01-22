@@ -13,6 +13,8 @@ public class RunExample {
     public static void main(String[] args) {
 
         var runSupervisedInstance = getStandardSetupRunSupervisedToAllTest();
+        
+        // runSupervisedInstance.logDebugImplementation(System.err::println);    // by default log is disabled
 
         testWithNoErrors(runSupervisedInstance);
         try{
@@ -34,14 +36,23 @@ public class RunExample {
 
         testHandlingExecutionException(runSupervisedInstance);
         testHandlingTimeOutException(runSupervisedInstance);
-        testWithDelayTimeOutException(runSupervisedInstance);
-        testWithDelayExcecutionException(runSupervisedInstance);
+        
+        try{
+            testWithDelayTimeOutException(runSupervisedInstance);
+        }catch(RuntimeException e){
+            System.out.println("Error thrown on testWithDelayExcecutionException()");
+        }
+
+        try{
+            testWithDelayExcecutionException(runSupervisedInstance);
+        }catch(RuntimeException e){
+            System.out.println("Error thrown on testWithDelayExcecutionException()");
+        }
       
     }
 
     private static  RunSupervised<String> getStandardSetupRunSupervisedToAllTest(){
         return new RunSupervised<String>()
-            .logDebugImplementation(System.err::println)    // by default log is disabled
             .setTimeOut(DEFAULT_SETUP_TIMEOUT, DEFAULT_SETUP_TIMEOUT_UNIT)            // by default 14400 seconds ( 4 hours )
             .withMaxRetryOnTimeOut(DEFAULT_SETUP_NUM_RETRY_TIME_OUT)                   // by default only once ( 1 )
             .withMaxRetryOnException(DEFAULT_SETUP_NUM_RETRY_EXCEPTION);            // by default only once  ( 1 )
