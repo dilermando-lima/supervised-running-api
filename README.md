@@ -3,24 +3,24 @@
 ## About
 This project is a simple API solution to execute any piece of code in a parallel thread and manage number of retrying and number of error on running may encapsulate all execution and timeout exceptions and handle final result after all retries.
 
-  * [Simple  running](#simple--running)
+  * [Simple  running](#simple-running)
   * [Set up and Running code](#set-up-and-running-code)
-    + [How does this work?](#how-does-this-work-)
-    + [Step 1: Instance running](#step-1--instance-running)
-    + [Step 2: Set up supervising](#step-2--set-up-supervising)
-    + [Step 3: Set implementation running](#step-3--set-implementation-running)
-    + [Step 4: Running](#step-4--running)
-    + [Step 5: Get result](#step-5--get-result)
+    + [How does this work?](#how-does-this-work)
+    + [Step 1: Instance running](#step-1-instance-running)
+    + [Step 2: Set up supervising](#step-2-set-up-supervising)
+    + [Step 3: Set implementation running](#step-3-set-implementation-running)
+    + [Step 4: Running](#step-4-running)
+    + [Step 5: Get result](#step-5-get-result)
   * [Documentation API](#documentation-api)
-  * [Showing more code :)](#showing-more-code---)
-    + [Running code setting up retries on **timeout**](#running-code-setting-up-retries-on---timeout--)
-    + [Running code setting up retries on any **exception running**](#running-code-setting-up-retries-on-any---exception-running--)
-    + [Running with **log** implementation](#running-with---log---implementation)
+  * [Showing more code :)](#showing-more-code)
+    + [Running code setting up retries on **timeout**](#running-code-setting-up-retries-on-timeout)
+    + [Running code setting up retries on any **exception running**](#running-code-setting-up-retries-on-any-exception-running)
+    + [Running with **log** implementation](#running-with-log-implementation)
     + [Running code handling timeout e execution exception](#running-code-handling-timeout-e-execution-exception)
     + [Running code setting up delay on retries](#running-code-setting-up-delay-on-retries)
-  * [Important! Child thread will not be managed](#important--child-thread-will-not-be-managed)
+  * [Important! Child thread will not be managed](#important-child-thread-will-not-be-managed)
 
-## Simple  running
+## Simple running
 Running a piece of code and retrieve result
 ```java
   String result = new RunSupervised<String>()
