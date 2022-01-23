@@ -1,7 +1,7 @@
 # Supervised Running API
 
 ## About
-This project is a simple API solution to execute any piece of code in a parallel thread and manage number of retrying and number of error on running may encapsulate all execution and timeout exceptions and handle final result after all retries.
+This project is a **simple API** solution *(All in one simple class )* to execute any piece of code in a **parallel thread** and **manage** number of **retrying** and number of **error** on running may encapsulate all execution exceptions and timeout exceptions **handling final result** after all retries.
 
   * [Simple  running](#simple-running)
   * [Set up and Running code](#set-up-and-running-code)
@@ -16,8 +16,8 @@ This project is a simple API solution to execute any piece of code in a parallel
     + [Running code setting up retries on **timeout**](#running-code-setting-up-retries-on-timeout)
     + [Running code setting up retries on any **exception running**](#running-code-setting-up-retries-on-any-exception-running)
     + [Running with **log** implementation](#running-with-log-implementation)
-    + [Running code handling timeout e execution exception](#running-code-handling-timeout-e-execution-exception)
-    + [Running code setting up delay on retries](#running-code-setting-up-delay-on-retries)
+    + [Running code **handling** timeout e execution **exception**](#running-code-handling-timeout-e-execution-exception)
+    + [Running code setting up **delay** on retries](#running-code-setting-up-delay-on-retries)
   * [Important! Child thread will not be managed](#important-child-thread-will-not-be-managed)
 
 ## Simple running
@@ -44,7 +44,7 @@ There are 2 retrying flows can be set up on API
   - retry on timeout managing
   - retry on running exception 
 
-All running will be executed in a single supervised that thread will manage retries and result.
+All running will be executed in a single supervised thread that will manage retries and result.
 
 Let's see the steps of this API:
 
@@ -111,7 +111,7 @@ Method                         | Description                         | Comments
 .setDelayOnEachTimeOutExceptionRetry(...)  | Set up delay on each retry comes from timeout exception | There is no delay by default
 .setDelayOnEachExecutionExceptionRetry(...)  |  Set up delay on each retry comes from execution exception | There is no delay by default
 
-## Showing more code :)
+## Showing more code
 
 ### Running code setting up retries on **timeout**
 Running a piece of code **forcing timeout** and supervising retries
@@ -189,7 +189,7 @@ Running a piece of code setting up **delay** on each retry
 ## Important! Child thread will not be managed
 Pay attention about start a child thread in running implementation. So this api doesn't managed sub thread on retries. If you need create child threads, it's suggested create this new child thread with this api.
 
-### Bad practice if you don't know how child thread will be ended.
+**Bad practice if you don't know how or when child thread will be ended.**
 ```java
    .setRunning(() ->{ // parent thread managed by this api
 
