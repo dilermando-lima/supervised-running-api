@@ -7,7 +7,7 @@ This project is a **simple API** solution *(All in one simple class )* to execut
   * [Set up and Running code](#set-up-and-running-code)
     + [How does this work?](#how-does-this-work)
     + [Step 1: Instance running](#step-1-instance-running)
-    + [Step 2: Set up supervising](#step-2-set-up-supervising)
+    + [Step 2: Set up supervising ( API settings )](#step-2-set-up-supervising)
     + [Step 3: Set implementation running](#step-3-set-implementation-running)
     + [Step 4: Running](#step-4-running)
     + [Step 5: Get result](#step-5-get-result)
